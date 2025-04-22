@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solitaire - Tutorial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #006000;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .tutorial-step {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            width: 100%;
+        }
+
+        .tutorial-step.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            min-height: 60vh;
+        }
+
+        #step3.active {
+            justify-content: flex-start;
+            padding-top: 10vh;
+        }
+
+        .tutorial-message {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 40px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .card {
+            width: 100px;
+            height: 140px;
+            background: white;
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .card.small {
+            width: 80px;
+            height: 112px;
+        }
+
+        .card.large {
+            width: 120px;
+            height: 168px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card.selected {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .card-front {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+        }
+
+        .card-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #0066cc;
+            border-radius: 8px;
+            background-image: 
+                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            display: none;
+        }
+
+        .card.flipped .card-back {
+            display: block;
+        }
+
+        .card.flipped .card-front {
+            display: none;
+        }
+
+        .card-corner {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .card-corner.top {
+            top: 8px;
+            left: 8px;
+        }
+
+        .card-corner.bottom {
+            bottom: 8px;
+            right: 8px;
+            transform: rotate(180deg);
+        }
+
+        .card-corner.single {
+            font-size: 24px;
+        }
+
+        .card-symbol {
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .card-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+        }
+
+        .card-center .large-symbol {
+            font-size: 72px;
+        }
+
+        .card-center .extra-large-symbol {
+            font-size: 96px;
+        }
+
+        .card.red, .card.red .card-corner, .card.red .card-center {
+            color: #d40000;
+        }
+
+        .card.black, .card.black .card-corner, .card.black .card-center {
+            color: #000000;
+        }
+
+        .tableau-area {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 20px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .pile {
+            min-height: 140px;
+            position: relative;
+            width: 100px;
+        }
+
+        .pile .card {
+            position: absolute;
+            margin: 0;
+            left: 0;
+        }
+
+        .pile .card:not(:first-child) {
+            margin-top: 30px;
+        }
+
+        @keyframes dealCard {
+            0% {
+                transform: translate(-50%, -100vh) rotate(-10deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(0, 0) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        .dealing {
+            animation: dealCard 0.5s ease-out forwards;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                width: 70px;
+                height: 98px;
+            }
+            
+            .card.small {
+                width: 60px;
+                height: 84px;
+            }
+            
+            .card.large {
+                width: 80px;
+                height: 112px;
+            }
+
+            .card-corner {
+                font-size: 12px;
+            }
+
+            .card-center .large-symbol {
+                font-size: 48px;
+            }
+
+            .card-center .extra-large-symbol {
+                font-size: 72px;
+            }
+
+            .tableau-area {
+                gap: 10px;
+                padding: 0 10px;
+            }
+
+            .pile .card:not(:first-child) {
+                margin-top: 20px;
+            }
+
+            .pile {
+                width: 70px;
+            }
+
+            .tutorial-message {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            .cards-container {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="tutorial-step active" id="step1">
+            <div class="tutorial-message">Select your preferred card size</div>
+            <div class="cards-container">
+                <div class="card small red" data-value="small">
+                    <div class="card-front">
+                        <div class="card-corner top">
+                            <div>2</div>
+                            <div class="card-symbol">♥</div>
+                        </div>
+                        <div class="card-center">♥</div>
+                        <div class="card-corner bottom">
+                            <div>2</div>
+                            <div class="card-symbol">♥</div>
+                        </div>
+                    </div>
+                    <div class="card-back"></div>
+                </div>
+                <div class="card large red" data-value="large">
+                    <div class="card-front">
+                        <div class="card-corner top single">
+                            <div>2</div>
+                        </div>
+                        <div class="card-center">
+                            <div class="large-symbol">♥</div>
+                        </div>
+                    </div>
+                    <div class="card-back"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tutorial-step" id="step2">
+            <div class="tutorial-message">Select your preferred font size</div>
+            <div class="cards-container">
+                <div class="card black" data-value="small-font">
+                    <div class="card-front">
+                        <div class="card-corner top">
+                            <div>A</div>
+                            <div class="card-symbol">♠</div>
+                        </div>
+                        <div class="card-center">♠</div>
+                        <div class="card-corner bottom">
+                            <div>A</div>
+                            <div class="card-symbol">♠</div>
+                        </div>
+                    </div>
+                    <div class="card-back"></div>
+                </div>
+                <div class="card black" data-value="large-font">
+                    <div class="card-front">
+                        <div class="card-corner top single">
+                            <div>A</div>
+                        </div>
+                        <div class="card-center">
+                            <div class="extra-large-symbol">♠</div>
+                        </div>
+                    </div>
+                    <div class="card-back"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tutorial-step" id="step3">
+            <div class="game-area">
+                <div class="tableau-area" id="game-start"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedSize = '';
+        let selectedFont = '';
+
+        function animateSelection(element) {
+            element.classList.add('selected');
+            setTimeout(() => {
+                const currentStep = element.closest('.tutorial-step');
+                currentStep.style.opacity = '0';
+                setTimeout(() => {
+                    currentStep.classList.remove('active');
+                    const nextStep = currentStep.nextElementSibling;
+                    nextStep.classList.add('active');
+                    setTimeout(() => {
+                        nextStep.style.opacity = '1';
+                    }, 50);
+                }, 500);
+            }, 300);
+        }
+
+        function createCardElement(card, isVisible = true, delay = 0) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${selectedSize} ${card.color}`;
+            
+            const cardFront = document.createElement('div');
+            cardFront.className = 'card-front';
+            
+            const topCorner = document.createElement('div');
+            topCorner.className = 'card-corner top single';
+            topCorner.innerHTML = `<div>${card.value}</div>`;
+            
+            const centerContent = document.createElement('div');
+            centerContent.className = 'card-center';
+            const symbol = document.createElement('div');
+            symbol.className = 'extra-large-symbol';
+            symbol.textContent = card.suit;
+            centerContent.appendChild(symbol);
+            
+            cardFront.appendChild(topCorner);
+            cardFront.appendChild(centerContent);
+            
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card-back';
+            
+            cardElement.appendChild(cardFront);
+            cardElement.appendChild(cardBack);
+            
+            if (!isVisible) {
+                cardElement.classList.add('flipped');
+            }
+
+            if (delay > 0) {
+                cardElement.style.opacity = '0';
+                cardElement.classList.add('dealing');
+                cardElement.style.animationDelay = `${delay}ms`;
+            }
+            
+            return cardElement;
+        }
+
+        function startNewGame() {
+            const gameStart = document.getElementById('game-start');
+            gameStart.innerHTML = '';
+            
+            const suits = ['♥', '♦', '♠', '♣'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            
+            for (let i = 0; i < 7; i++) {
+                const pile = document.createElement('div');
+                pile.className = 'pile';
+                
+                for (let j = 0; j <= i; j++) {
+                    const isLastCard = j === i;
+                    const suitIndex = (i + j) % suits.length;
+                    const valueIndex = (i + j) % values.length;
+                    
+                    const card = {
+                        suit: suits[suitIndex],
+                        value: values[valueIndex],
+                        color: (suits[suitIndex] === '♥' || suits[suitIndex] === '♦') ? 'red' : 'black'
+                    };
+                    
+                    const cardElement = createCardElement(card, isLastCard, (i * 7 + j) * 100);
+                    cardElement.style.top = `${j * 30}px`;
+                    cardElement.style.zIndex = j;
+                    pile.appendChild(cardElement);
+                }
+                
+                gameStart.appendChild(pile);
+            }
+        }
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.closest('#step1') && !selectedSize) {
+                    selectedSize = this.dataset.value;
+                    animateSelection(this);
+                } else if (this.closest('#step2') && !selectedFont) {
+                    selectedFont = this.dataset.value;
+                    animateSelection(this);
+                    setTimeout(startNewGame, 1000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
